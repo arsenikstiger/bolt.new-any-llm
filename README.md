@@ -29,12 +29,17 @@ This fork of Bolt.new allows you to choose the LLM that you use for each prompt!
 - ⬜ Azure Open AI API Integration
 - ⬜ HuggingFace Integration
 - ⬜ Perplexity Integration
+- ⬜ Containerize the application with Docker for easy installation
+- ⬜ Better prompting for smaller LLMs (code window sometimes doesn't start)
+- ⬜ Attach images to prompts
+- ⬜ Run agents in the backend as opposed to a single model call
+- ⬜ Publish projects directly to GitHub
 - ⬜ Deploy directly to Vercel/Netlify/other similar platforms
 - ⬜ Load local projects into the app
 - ⬜ Ability to revert code to earlier version
 - ⬜ Prompt caching
 - ⬜ Ability to enter API keys in the UI
-- ⬜ Have LLM plan the project in a MD file for better results/transparency
+- ⬜ Prevent Bolt from rewriting files as often
 
 # Bolt.new: AI-Powered Full-Stack Web Development in the Browser
 
@@ -54,6 +59,7 @@ Claude, v0, etc are incredible- but you can't install packages, run backends, or
 
 - **AI with Environment Control**: Unlike traditional dev environments where the AI can only assist in code generation, Bolt.new gives AI models **complete control** over the entire environment including the filesystem, node server, package manager, terminal, and browser console. This empowers AI agents to handle the whole app lifecycle—from creation to deployment.
 
+Whether you’re an experienced developer, a PM, or a designer, Bolt.new allows you to easily build production-grade full-stack applications.
 Whether you’re an experienced developer, a PM, or a designer, Bolt.new allows you to easily build production-grade full-stack applications.
 
 For developers interested in building their own AI-powered development tools with WebContainers, check out the open-source Bolt codebase in this repo!
@@ -123,7 +129,7 @@ To start the development server:
 pnpm run dev
 ```
 
-This will start the Remix Vite development server. You will need Google Chrome Canary to run this locally if you use Chrome! It's an easy install and a good browser for web development anyway.
+This will start the Remix Vite development server. You will need Google Chrome Canary to run this locally! It's an easy install and a good browser for web development anyway.
 
 ## Tips and Tricks
 
