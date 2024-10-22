@@ -25,6 +25,7 @@
   "dependencies": {
     "@ai-sdk/anthropic": "^0.0.39",
     "@ai-sdk/google": "^0.0.52",
+    "@ai-sdk/mistral": "^0.0.44",
     "@ai-sdk/openai": "^0.0.66",
     "@codemirror/autocomplete": "^6.17.0",
     "@codemirror/commands": "^6.6.0",
@@ -94,6 +95,7 @@
     "is-ci": "^3.0.1",
     "node-fetch": "^3.3.2",
     "prettier": "^3.3.2",
+    "sass-embedded": "^1.80.3",
     "typescript": "^5.5.2",
     "unified": "^11.0.5",
     "unocss": "^0.61.3",
