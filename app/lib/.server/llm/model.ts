@@ -52,6 +52,14 @@ export function getGroqModel(apiKey: string, model: string) {
   return openai(model);
 }
 
+export function getDeepseekModel(apiKey: string, model: string) {
+  const openai = createOpenAI({
+    baseURL: 'https://api.deepseek.com/beta',
+    apiKey,
+  });
+
+  return openai(model);
+}
 export function getOllamaModel(baseURL: string, model: string) {
   let Ollama = ollama(model);
   Ollama.config.baseURL = `${baseURL}/api`;
@@ -90,6 +98,8 @@ export function getModel(provider: string, customApiKey: string, model: string, 
       return getMistralModel(apiKey, model);
     case 'OpenAILike':
       return getOpenAILikeModel(baseURL, apiKey, model);
+    case 'Deepseek':
+      return getDeepseekModel(apiKey, model);
     default:
       return getOllamaModel(baseURL, model);
   }
