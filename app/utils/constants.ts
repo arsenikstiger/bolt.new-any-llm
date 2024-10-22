@@ -35,6 +35,7 @@ const staticModels: ModelInfo[] = [
   { name: 'mistral-large-latest', label: 'Mistral-large-latest', provider: 'Mistral' },
   { name: 'deepseek-coder', label: 'Deepseek-Coder', provider: 'Deepseek' },
   { name: 'deepseek-chat', label: 'Deepseek-Chat', provider: 'Deepseek' },
+  { name: 'open-mistral-7b', label: 'Mistral', provider: 'Mistral' },
 ];
 
 export let MODEL_LIST: ModelInfo[] = [...staticModels];
