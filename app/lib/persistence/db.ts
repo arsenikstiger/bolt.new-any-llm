@@ -7,7 +7,7 @@ const logger = createScopedLogger('ChatHistory');
 // this is used at the top level and never rejects
 export async function openDatabase(): Promise<IDBDatabase | undefined> {
   return new Promise((resolve) => {
-    const request = indexedDB.open('boltHistory', 1);
+    const request = indexedDB.open('boltHistory', 2);
 
     request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
       const db = (event.target as IDBOpenDBRequest).result;
@@ -16,6 +16,10 @@ export async function openDatabase(): Promise<IDBDatabase | undefined> {
         const store = db.createObjectStore('chats', { keyPath: 'id' });
         store.createIndex('id', 'id', { unique: true });
         store.createIndex('urlId', 'urlId', { unique: true });
+      }
+
+      if (!db.objectStoreNames.contains('theme')) {
+        db.createObjectStore('theme', { keyPath: 'id' });
       }
     };
 
@@ -156,5 +160,28 @@ async function getUrlIds(db: IDBDatabase): Promise<string[]> {
     request.onerror = () => {
       reject(request.error);
     };
+  });
+}
+
+export async function saveTheme(db: IDBDatabase, theme: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction('theme', 'readwrite');
+    const store = transaction.objectStore('theme');
+
+    const request = store.put({ id: 'theme', value: theme });
+
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+export async function getTheme(db: IDBDatabase): Promise<{ id: string; value: string } | undefined> {
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction('theme', 'readonly');
+    const store = transaction.objectStore('theme');
+    const request = store.get('theme');
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
   });
 }
