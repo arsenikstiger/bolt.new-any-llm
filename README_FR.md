@@ -109,6 +109,7 @@ Lorsque vous ajoutez un nouveau modèle au tableau MODEL_LIST, il sera immédiat
 - `pnpm run typecheck` : Exécute la vérification des types TypeScript.
 - `pnpm run typegen` : Génère les types TypeScript en utilisant Wrangler.
 - `pnpm run deploy` : Construit le projet et le déploie sur Cloudflare Pages.
+- `pnpm run docker` : Déploie le docker en mode démon.
 
 ## Développement
 
