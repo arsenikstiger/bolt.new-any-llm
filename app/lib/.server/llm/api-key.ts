@@ -23,7 +23,7 @@ export async function getAPIKey(cloudflareEnv: Env, provider: string) {
     case 'Mistral':
       return env.MISTRAL_AI_API_KEY || cloudflareEnv.MISTRAL_AI_API_KEY;
     case 'OpenAILike':
-      return env.OPENAI_API_LIKE_KEY || cloudflareEnv.OPENAI_API_LIKE_KEY;
+      return env.OPENAI_LIKE_API_KEY || cloudflareEnv.OPENAI_LIKE_API_KEY;
     default:
       return '';
   }
@@ -32,7 +32,7 @@ export async function getAPIKey(cloudflareEnv: Env, provider: string) {
 export function getBaseURL(cloudflareEnv: Env, provider: string) {
   switch (provider) {
     case 'OpenAILike':
-      return env.OPENAI_API_LIKE_BASE_URL || cloudflareEnv.OPENAI_API_LIKE_BASE_URL;
+      return env.OPENAI_LIKE_API_BASE_URL || cloudflareEnv.OPENAI_LIKE_API_BASE_URL;
     default:
       return '';
   }
