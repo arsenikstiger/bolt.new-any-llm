@@ -10,9 +10,11 @@ import { classNames } from '~/utils/classNames';
 import { MODEL_LIST, DEFAULT_PROVIDER } from '~/utils/constants';
 import { Messages } from './Messages.client';
 import { SendButton } from './SendButton.client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { openDatabase, setProvider, getProviderById } from '~/lib/persistence/db';
 
 import styles from './BaseChat.module.scss';
+import type { Provider } from '~/types/provider';
 
 const EXAMPLE_PROMPTS = [
   { text: 'Build a todo app in React using Tailwind' },
@@ -22,47 +24,101 @@ const EXAMPLE_PROMPTS = [
   { text: 'How do I center a div?' },
 ];
 
-const providerList = [...new Set(MODEL_LIST.map((model) => model.provider))]
+const ModelSelector = ({ model, setModel }) => {
+  const [providerList, setProviderList] = useState<Provider[]>([]);
+  const [selectedProvider, setSelectedProvider] = useState<Provider>();
+  const [apiKeyOrUrl, setApiKeyOrUrl] = useState<string>('');
 
-const ModelSelector = ({ model, setModel, modelList, providerList }) => {
-  const [provider, setProvider] = useState(DEFAULT_PROVIDER);
+  useEffect(() => {
+    const loadProviders = async () => {
+      const providerIdList = [...new Set(MODEL_LIST.map((model) => model.provider))];
+      const db = await openDatabase();
+      if (db) {
+        const providerPromises = providerIdList.map(async (id) => {
+          return (await getProviderById(db, id)) || { id, models: MODEL_LIST.filter((m) => m.provider === id) };
+        });
+
+        setProviderList(await Promise.all(providerPromises));
+        setSelectedProvider(providerList.find((p) => p.id === DEFAULT_PROVIDER));
+      }
+    };
+    loadProviders();
+  }, []);
+
+  useEffect(() => {
+    if (selectedProvider) {
+      console.log('Selected Provider:', selectedProvider);
+      setApiKeyOrUrl(selectedProvider.apiKey ?? '');
+    }
+  }, [selectedProvider]);
+
+  const saveProvider = async () => {
+    if (selectedProvider) {
+      selectedProvider.apiKey = apiKeyOrUrl;
+      const db = await openDatabase();
+      if (db) {
+        await setProvider(db, selectedProvider);
+      }
+    }
+  };
+
   return (
     <div className="mb-2">
-      <select 
-        value={provider}
-        onChange={(e) => {
-          setProvider(e.target.value);
-          const firstModel = [...modelList].find(m => m.provider == e.target.value);
-          setModel(firstModel ? firstModel.name : '');
-        }}
-        className="w-full p-2 rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-prompt-background text-bolt-elements-textPrimary focus:outline-none"
-      >
-        {providerList.map((provider) => (
-          <option key={provider} value={provider}>
-            {provider}
-          </option>
-        ))}
-          <option key="Ollama" value="Ollama">
-            Ollama
-          </option>        
-      </select>
-      <select
-        value={model}
-        onChange={(e) => setModel(e.target.value)}
-        className="w-full p-2 rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-prompt-background text-bolt-elements-textPrimary focus:outline-none"
-      >
-        {[...modelList].filter(e => e.provider == provider && e.name).map((modelOption) => (
-          <option key={modelOption.name} value={modelOption.name}>
-            {modelOption.label}
-          </option>
-        ))}
-      </select>
+      <div className="flex mt-2">
+        <select
+          value={selectedProvider?.id}
+          onChange={(e) => {
+            const provider = providerList.find((p) => p.id === e.target.value);
+            setSelectedProvider(provider);
+            const firstModel = provider?.models.find((m) => m);
+            setModel(firstModel?.name);
+          }}
+          className="w-full p-2 rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-prompt-background text-bolt-elements-textPrimary focus:outline-none"
+        >
+          {providerList.map((provider) => (
+            <option key={provider.id} value={provider.id}>
+              {provider.id}
+            </option>
+          ))}
+        </select>
+      </div>
+      {selectedProvider?.id === 'Ollama' || (
+        <div className="flex mt-2">
+          <input
+            type="text"
+            value={apiKeyOrUrl}
+            placeholder="Custom URL"
+            onChange={(e) => setApiKeyOrUrl(e.target.value)}
+            className="w-full p-2 rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-prompt-background text-bolt-elements-textPrimary focus:outline-none"
+          />
+          <button
+            onClick={async (e) => {
+              await saveProvider();
+            }}
+            className="ml-2 p-2 rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-prompt-background text-bolt-elements-textPrimary focus:outline-none"
+          >
+            Save
+          </button>
+        </div>
+      )}
+      <div className="flex mt-2">
+        <select
+          value={model}
+          onChange={(e) => setModel(e.target.value)}
+          className="w-full p-2 rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-prompt-background text-bolt-elements-textPrimary focus:outline-none"
+        >
+          {selectedProvider?.models.map((modelOption) => (
+            <option key={modelOption.name} value={modelOption.name}>
+              {modelOption.label}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 };
 
 const TEXTAREA_MIN_HEIGHT = 76;
-
 interface BaseChatProps {
   textareaRef?: React.RefObject<HTMLTextAreaElement> | undefined;
   messageRef?: RefCallback<HTMLDivElement> | undefined;
@@ -150,12 +206,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                   'sticky bottom-0': chatStarted,
                 })}
               >
-                <ModelSelector
-                  model={model}
-                  setModel={setModel}
-                  modelList={MODEL_LIST}
-                  providerList={providerList}
-                />
+                <ModelSelector model={model} setModel={setModel} />
                 <div
                   className={classNames(
                     'shadow-sm border border-bolt-elements-borderColor bg-bolt-elements-prompt-background backdrop-filter backdrop-blur-[8px] rounded-lg overflow-hidden',

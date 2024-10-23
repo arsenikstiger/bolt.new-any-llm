@@ -24,27 +24,33 @@ export type Messages = Message[];
 
 export type StreamingOptions = Omit<Parameters<typeof _streamText>[0], 'model'>;
 
-function extractModelFromMessage(message: Message): { model: string; content: string } {
-  const modelRegex = /^\[Model: (.*?)\]\n\n/;
+function extractModelFromMessage(message: Message): { model: string; apiKey: string; content: string } {
+  const modelRegex = /^\[Model: (.*?)\]\[APIKey: (.*?)\]\n\n/;
   const match = message.content.match(modelRegex);
 
   if (match) {
     const model = match[1];
+    const apiKey = match[2];
+
+    console.log('APIKey:', apiKey);
+
     const content = message.content.replace(modelRegex, '');
-    return { model, content };
+    return { model, apiKey, content };
   }
 
   // Default model if not specified
-  return { model: DEFAULT_MODEL, content: message.content };
+  return { model: DEFAULT_MODEL, apiKey: '', content: message.content };
 }
 
 export function streamText(messages: Messages, env: Env, options?: StreamingOptions) {
   let currentModel = DEFAULT_MODEL;
+  let customApiKey = '';
   const processedMessages = messages.map((message) => {
     if (message.role === 'user') {
-      const { model, content } = extractModelFromMessage(message);
+      const { model, apiKey, content } = extractModelFromMessage(message);
       if (model && MODEL_LIST.find((m) => m.name === model)) {
         currentModel = model; // Update the current model
+        customApiKey = apiKey; // Update the API key if provided
       }
       return { ...message, content };
     }
@@ -54,7 +60,7 @@ export function streamText(messages: Messages, env: Env, options?: StreamingOpti
   const provider = MODEL_LIST.find((model) => model.name === currentModel)?.provider || DEFAULT_PROVIDER;
 
   return _streamText({
-    model: getModel(provider, currentModel, env),
+    model: getModel(provider, customApiKey, currentModel, env),
     system: getSystemPrompt(),
     maxTokens: MAX_TOKENS,
     // headers: {

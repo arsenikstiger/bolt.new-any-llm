@@ -1,8 +1,9 @@
 // @ts-nocheck
 // Preventing TS checks with files presented in the video for a better presentation.
 import { env } from 'node:process';
+import { openDatabase, getProviderById } from '~/lib/persistence/db';
 
-export function getAPIKey(cloudflareEnv: Env, provider: string) {
+export async function getAPIKey(cloudflareEnv: Env, provider: string) {
   /**
    * The `cloudflareEnv` is only used when deployed or when previewing locally.
    * In development the environment variables are available through `env`.
@@ -20,8 +21,8 @@ export function getAPIKey(cloudflareEnv: Env, provider: string) {
     case 'OpenRouter':
       return env.OPEN_ROUTER_API_KEY || cloudflareEnv.OPEN_ROUTER_API_KEY;
     case 'Mistral':
-      return env.MISTRAL_API_KEY || cloudflareEnv.MISTRAL_API_KEY;
+      return env.MISTRAL_AI_API_KEY || cloudflareEnv.MISTRAL_AI_API_KEY;
     default:
-      return "";
+      return '';
   }
 }

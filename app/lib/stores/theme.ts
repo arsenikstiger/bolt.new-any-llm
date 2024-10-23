@@ -1,4 +1,5 @@
 import { atom } from 'nanostores';
+import { openDatabase, saveTheme, getTheme } from '~/lib/persistence/db';
 
 export type Theme = 'dark' | 'light';
 
@@ -10,26 +11,38 @@ export function themeIsDark() {
 
 export const DEFAULT_THEME = 'light';
 
-export const themeStore = atom<Theme>(initStore());
+export const themeStore = atom<Theme>(await initStore());
 
-function initStore() {
+async function getThemeFromDB(): Promise<Theme> {
+  const db = await openDatabase();
+  if (db) {
+    const themeResult = await getTheme(db);
+    return (themeResult?.value as Theme) || DEFAULT_THEME;
+  }
+  return DEFAULT_THEME;
+}
+
+async function initStore() {
   if (!import.meta.env.SSR) {
-    const persistedTheme = localStorage.getItem(kTheme) as Theme | undefined;
     const themeAttribute = document.querySelector('html')?.getAttribute('data-theme');
+    const dbTheme = await getThemeFromDB();
 
-    return persistedTheme ?? (themeAttribute as Theme) ?? DEFAULT_THEME;
+    return dbTheme ?? (themeAttribute as Theme) ?? DEFAULT_THEME;
   }
 
   return DEFAULT_THEME;
 }
 
-export function toggleTheme() {
+export async function toggleTheme() {
   const currentTheme = themeStore.get();
   const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
 
   themeStore.set(newTheme);
 
-  localStorage.setItem(kTheme, newTheme);
-
   document.querySelector('html')?.setAttribute('data-theme', newTheme);
+
+  const db = await openDatabase();
+  if (db) {
+    await saveTheme(db, newTheme);
+  }
 }

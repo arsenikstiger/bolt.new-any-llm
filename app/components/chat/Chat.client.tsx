@@ -7,14 +7,15 @@ import { useAnimate } from 'framer-motion';
 import { memo, useEffect, useRef, useState } from 'react';
 import { cssTransition, toast, ToastContainer } from 'react-toastify';
 import { useMessageParser, usePromptEnhancer, useShortcuts, useSnapScroll } from '~/lib/hooks';
-import { useChatHistory } from '~/lib/persistence';
+import { useChatHistory, openDatabase, getProviderById } from '~/lib/persistence';
 import { chatStore } from '~/lib/stores/chat';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { fileModificationsToHTML } from '~/utils/diff';
-import { DEFAULT_MODEL } from '~/utils/constants';
+import { MODEL_LIST, DEFAULT_MODEL } from '~/utils/constants';
 import { cubicEasingFn } from '~/utils/easings';
 import { createScopedLogger, renderLogger } from '~/utils/logger';
 import { BaseChat } from './BaseChat';
+import type { Provider } from '~/types/provider';
 
 const toastAnimation = cssTransition({
   enter: 'animated fadeInRight',
@@ -172,6 +173,16 @@ export const ChatImpl = memo(({ initialMessages, storeMessageHistory }: ChatProp
 
     runAnimation();
 
+    let apiKey = '';
+    let provider: Provider | undefined;
+    const providerId = MODEL_LIST.find((m) => m.name === model)?.provider;
+    if (providerId) {
+      const db = await openDatabase();
+      if (db) {
+        provider = await getProviderById(db, providerId);
+      }
+    }
+
     if (fileModifications !== undefined) {
       const diff = fileModificationsToHTML(fileModifications);
 
@@ -182,7 +193,7 @@ export const ChatImpl = memo(({ initialMessages, storeMessageHistory }: ChatProp
        * manually reset the input and we'd have to manually pass in file attachments. However, those
        * aren't relevant here.
        */
-      append({ role: 'user', content: `[Model: ${model}]\n\n${diff}\n\n${_input}` });
+      append({ role: 'user', content: `[Model: ${model}][APIKey: ${provider?.apiKey || ''}]\n\n${diff}\n\n${_input}` });
 
       /**
        * After sending a new message we reset all modifications since the model
@@ -190,7 +201,7 @@ export const ChatImpl = memo(({ initialMessages, storeMessageHistory }: ChatProp
        */
       workbenchStore.resetAllFileModifications();
     } else {
-      append({ role: 'user', content: `[Model: ${model}]\n\n${_input}` });
+      append({ role: 'user', content: `[Model: ${model}][APIKey: ${provider?.apiKey || ''}]\n\n${_input}` });
     }
 
     setInput('');
