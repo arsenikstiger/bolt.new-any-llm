@@ -80,6 +80,9 @@ const ModelSelector = ({ model, setModel }) => {
               {provider.id}
             </option>
           ))}
+          <option key="OpenAILike" value="OpenAILike">
+            OpenAI like
+          </option>
         </select>
       </div>
       {selectedProvider?.id === 'Ollama' || (

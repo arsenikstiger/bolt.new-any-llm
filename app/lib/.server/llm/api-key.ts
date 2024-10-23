@@ -22,6 +22,17 @@ export async function getAPIKey(cloudflareEnv: Env, provider: string) {
       return env.OPEN_ROUTER_API_KEY || cloudflareEnv.OPEN_ROUTER_API_KEY;
     case 'Mistral':
       return env.MISTRAL_AI_API_KEY || cloudflareEnv.MISTRAL_AI_API_KEY;
+    case 'OpenAILike':
+      return env.OPENAI_API_LIKE_KEY || cloudflareEnv.OPENAI_API_LIKE_KEY;
+    default:
+      return '';
+  }
+}
+
+export function getBaseURL(cloudflareEnv: Env, provider: string) {
+  switch (provider) {
+    case 'OpenAILike':
+      return env.OPENAI_API_LIKE_BASE_URL || cloudflareEnv.OPENAI_API_LIKE_BASE_URL;
     default:
       return '';
   }
