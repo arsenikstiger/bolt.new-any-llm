@@ -31,7 +31,7 @@ export function getGoogleModel(apiKey: string, model: string) {
 }
 
 export function getMistralModel(apiKey: string, model: string) {
-  const mistral = createMistral(apiKey);
+  const mistral = createMistral({ apiKey });
 
   return mistral(model);
 }
@@ -57,8 +57,13 @@ export function getOpenRouterModel(apiKey: string, model: string) {
   return openRouter.chat(model);
 }
 
-export function getModel(provider: string, model: string, env: Env) {
-  const apiKey = getAPIKey(env, provider);
+export function getModel(provider: string, customApiKey: string, model: string, env: Env) {
+  let apiKey = getAPIKey(env, provider);
+
+  // If a custom API key is provided, use it instead of the environment variable.
+  if (customApiKey !== '') {
+    apiKey = customApiKey;
+  }
 
   switch (provider) {
     case 'Anthropic':

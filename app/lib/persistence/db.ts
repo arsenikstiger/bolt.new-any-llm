@@ -1,13 +1,14 @@
 import type { Message } from 'ai';
 import { createScopedLogger } from '~/utils/logger';
 import type { ChatHistoryItem } from './useChatHistory';
+import type { Provider } from '~/types/provider';
 
 const logger = createScopedLogger('ChatHistory');
 
 // this is used at the top level and never rejects
 export async function openDatabase(): Promise<IDBDatabase | undefined> {
   return new Promise((resolve) => {
-    const request = indexedDB.open('boltHistory', 2);
+    const request = indexedDB.open('boltHistory', 4);
 
     request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
       const db = (event.target as IDBOpenDBRequest).result;
@@ -20,6 +21,10 @@ export async function openDatabase(): Promise<IDBDatabase | undefined> {
 
       if (!db.objectStoreNames.contains('theme')) {
         db.createObjectStore('theme', { keyPath: 'id' });
+      }
+
+      if (!db.objectStoreNames.contains('providers')) {
+        db.createObjectStore('providers', { keyPath: 'id' });
       }
     };
 
@@ -182,6 +187,29 @@ export async function getTheme(db: IDBDatabase): Promise<{ id: string; value: st
     const request = store.get('theme');
 
     request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+export async function setProvider(db: IDBDatabase, provider: Provider): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction('providers', 'readwrite');
+    const store = transaction.objectStore('providers');
+
+    const request = store.put(provider);
+
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+export async function getProviderById(db: IDBDatabase, id: string): Promise<Provider> {
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction('providers', 'readonly');
+    const store = transaction.objectStore('providers');
+    const request = store.get(id);
+
+    request.onsuccess = () => resolve(request.result as Provider);
     request.onerror = () => reject(request.error);
   });
 }

@@ -1,8 +1,9 @@
 // @ts-nocheck
 // Preventing TS checks with files presented in the video for a better presentation.
 import { env } from 'node:process';
+import { openDatabase, getProviderById } from '~/lib/persistence/db';
 
-export function getAPIKey(cloudflareEnv: Env, provider: string) {
+export async function getAPIKey(cloudflareEnv: Env, provider: string) {
   /**
    * The `cloudflareEnv` is only used when deployed or when previewing locally.
    * In development the environment variables are available through `env`.
