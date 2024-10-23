@@ -18,7 +18,7 @@
     "typecheck": "tsc",
     "typegen": "wrangler types",
     "preview": "pnpm run build && pnpm run start",
-    "docker": "docker-compose up -d"
+    "docker": "docker compose up -d"
   },
   "engines": {
     "node": ">=18.18.0"
