@@ -96,4 +96,4 @@ async function initializeModelList(): Promise<void> {
   MODEL_LIST = [...ollamaModels, ...openAiLikeModels, ...staticModels];
 }
 initializeModelList().then();
-export { getOllamaModels, initializeModelList };
+export { getOllamaModels, getOpenAILikeModels, initializeModelList };
