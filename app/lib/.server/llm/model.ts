@@ -33,14 +33,6 @@ export function getOpenAIModel(apiKey: string, model: string) {
   return openai(model);
 }
 
-export function getMistralModel(apiKey: string, model: string) {
-  const mistral = createMistral({
-    apiKey,
-  });
-
-  return mistral(model);
-}
-
 export function getGoogleModel(apiKey: string, model: string) {
   const google = createGoogleGenerativeAI(apiKey);
 

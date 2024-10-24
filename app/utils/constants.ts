@@ -79,7 +79,7 @@ async function getOpenAILikeModels(): Promise<ModelInfo[]> {
         Authorization: `Bearer ${api_key}`,
       },
     });
-    const res = await response.json();
+    const res = (await response.json()) as any;
     return res.data.map((model: any) => ({
       name: model.id,
       label: model.id,

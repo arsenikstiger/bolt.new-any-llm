@@ -1,5 +1,4 @@
-
-interface OllamaModelDetails {
+export interface OllamaModelDetails {
   parent_model: string;
   format: string;
   family: string;
