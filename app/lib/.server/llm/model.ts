@@ -4,7 +4,6 @@ import { getAPIKey, getBaseURL } from '~/lib/.server/llm/api-key';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { createMistral } from '@ai-sdk/mistral';
 import { ollama } from 'ollama-ai-provider';
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { mistral } from '@ai-sdk/mistral';
@@ -31,14 +30,6 @@ export function getOpenAIModel(apiKey: string, model: string) {
   });
 
   return openai(model);
-}
-
-export function getMistralModel(apiKey: string, model: string) {
-  const mistral = createMistral({
-    apiKey,
-  });
-
-  return mistral(model);
 }
 
 export function getGoogleModel(apiKey: string, model: string) {
