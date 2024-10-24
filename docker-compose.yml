@@ -4,18 +4,17 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - '3000:3000'
+      - '31500:3000'
     environment:
       - NODE_ENV=production
+      - HOST=0.0.0.0
+      - OLLAMA_API_BASE_URL=http://host.docker.internal:11343
       # Add any other environment variables your app needs
       # - OPENAI_API_KEY=${OPENAI_API_KEY}
       # - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       # - GROQ_API_KEY=${GROQ_API_KEY}
       # - OPEN_ROUTER_API_KEY=${OPEN_ROUTER_API_KEY}
     volumes:
-      # This volume is for development purposes, allowing live code updates
-      # Comment out or remove for production
-      - .:/app
       # This volume is to prevent node_modules from being overwritten by the above volume
       - /app/node_modules
     command: pnpm run start

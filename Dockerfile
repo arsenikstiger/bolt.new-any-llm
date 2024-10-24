@@ -11,7 +11,7 @@ RUN npm install -g pnpm@9.4.0
 COPY package.json pnpm-lock.yaml* ./
 
 # Install dependencies
-RUN pnpm install
+RUN pnpm install --frozen-lockfile
 
 # Copy the rest of the application code
 COPY . .
@@ -24,6 +24,9 @@ RUN chmod +x bindings.sh
 
 # Expose the port the app runs on (adjust if you specified a different port)
 EXPOSE 3000
+
+# Ensure the app listens on all network interfaces
+ENV HOST 0.0.0.0
 
 # Start the application
 CMD ["pnpm", "run", "start"]
