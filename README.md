@@ -29,17 +29,11 @@ This fork of Bolt.new allows you to choose the LLM that you use for each prompt!
 - ⬜ Azure Open AI API Integration
 - ⬜ HuggingFace Integration
 - ⬜ Perplexity Integration
-- ⬜ Containerize the application with Docker for easy installation
-- ⬜ Better prompting for smaller LLMs (code window sometimes doesn't start)
-- ⬜ Attach images to prompts
-- ⬜ Run agents in the backend as opposed to a single model call
-- ⬜ Publish projects directly to GitHub
 - ⬜ Deploy directly to Vercel/Netlify/other similar platforms
 - ⬜ Load local projects into the app
 - ⬜ Ability to revert code to earlier version
 - ⬜ Prompt caching
 - ⬜ Ability to enter API keys in the UI
-- ⬜ Prevent Bolt from rewriting files as often
 - ⬜ Have LLM plan the project in a MD file for better results/transparency
 
 # Bolt.new: AI-Powered Full-Stack Web Development in the Browser
