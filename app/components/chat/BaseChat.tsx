@@ -143,6 +143,8 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
       input = '',
       model,
       setModel,
+      provider,
+      setProvider,
       sendMessage,
       handleInputChange,
       enhancePrompt,
@@ -151,7 +153,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     ref,
   ) => {
     const TEXTAREA_MAX_HEIGHT = chatStarted ? 400 : 200;
-    const [provider, setProvider] = useState(DEFAULT_PROVIDER);
     const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
     const [modelList, setModelList] = useState([]); // État pour la liste des modèles
 

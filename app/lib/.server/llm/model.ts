@@ -58,7 +58,10 @@ export function getGroqModel(apiKey: string, model: string) {
 }
 
 export function getOllamaModel(baseURL: string, model: string) {
-  let Ollama = ollama(model);
+  let Ollama = ollama(model, {
+    numCtx: 32768,
+  });
+
   Ollama.config.baseURL = `${baseURL}/api`;
   return Ollama;
 }
@@ -78,6 +81,24 @@ export function getOpenRouterModel(apiKey: string, model: string) {
   });
 
   return openRouter.chat(model);
+}
+
+export function getLMStudioModel(baseURL: string, model: string) {
+  const lmstudio = createOpenAI({
+    baseUrl: `${baseURL}/v1`,
+    apiKey: '',
+  });
+
+  return lmstudio(model);
+}
+
+export function getXAIModel(apiKey: string, model: string) {
+  const openai = createOpenAI({
+    baseURL: 'https://api.x.ai/v1',
+    apiKey,
+  });
+
+  return openai(model);
 }
 
 export function getModel(provider: string, model: string, env: Env, apiKeys?: Record<string, string>): ModelInfo {
@@ -101,6 +122,10 @@ export function getModel(provider: string, model: string, env: Env, apiKeys?: Re
       return getDeepseekModel(apiKey, model);
     case 'Mistral':
       return getMistralModel(apiKey, model);
+    case 'LMStudio':
+      return getLMStudioModel(baseURL, model);
+    case 'xAI':
+      return getXAIModel(apiKey, model);
     default:
       return getOllamaModel(baseURL, model);
   }

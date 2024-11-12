@@ -12,7 +12,11 @@ export async function action(args: ActionFunctionArgs) {
 }
 
 async function enhancerAction({ context, request }: ActionFunctionArgs) {
-  const { model, message } = await request.json<{ message: string; model: ModelInfo }>();
+  const { model, message, apiKeys } = await request.json<{
+    message: string;
+    model: ModelInfo;
+    apiKeys?: Record<string, string>;
+  }>();
 
   try {
     const result = await streamText(
@@ -32,27 +36,41 @@ async function enhancerAction({ context, request }: ActionFunctionArgs) {
         },
       ],
       context.cloudflare.env,
+      undefined,
+      apiKeys,
     );
 
     const transformStream = new TransformStream({
       transform(chunk, controller) {
-        const processedChunk = decoder
-          .decode(chunk)
-          .split('\n')
-          .filter((line) => line !== '')
-          .map(parseStreamPart)
-          .map((part) => part.value)
-          .join('');
+        const text = decoder.decode(chunk);
+        const lines = text.split('\n').filter((line) => line.trim() !== '');
 
-        controller.enqueue(encoder.encode(processedChunk));
+        for (const line of lines) {
+          try {
+            const parsed = parseStreamPart(line);
+            if (parsed.type === 'text') {
+              controller.enqueue(encoder.encode(parsed.value));
+            }
+          } catch (e) {
+            // Skip invalid JSON lines
+            console.warn('Failed to parse stream part:', line);
+          }
+        }
       },
     });
 
     const transformedStream = result.toAIStream().pipeThrough(transformStream);
 
     return new StreamingTextResponse(transformedStream);
-  } catch (error) {
+  } catch (error: unknown) {
     console.log(error);
+
+    if (error instanceof Error && error.message?.includes('API key')) {
+      throw new Response('Invalid or missing API key', {
+        status: 401,
+        statusText: 'Unauthorized',
+      });
+    }
 
     throw new Response(null, {
       status: 500,

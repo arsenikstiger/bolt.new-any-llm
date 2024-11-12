@@ -11,7 +11,7 @@ import { useChatHistory } from '~/lib/persistence';
 import { chatStore } from '~/lib/stores/chat';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { fileModificationsToHTML } from '~/utils/diff';
-import { DEFAULT_MODEL } from '~/utils/constants';
+import { DEFAULT_MODEL, DEFAULT_PROVIDER } from '~/utils/constants';
 import { cubicEasingFn } from '~/utils/easings';
 import { createScopedLogger, renderLogger } from '~/utils/logger';
 import { BaseChat } from './BaseChat';
@@ -216,6 +216,16 @@ export const ChatImpl = memo(({ initialMessages, storeMessageHistory }: ChatProp
     }
   }, []);
 
+  const handleModelChange = (newModel: string) => {
+    setModel(newModel);
+    Cookies.set('selectedModel', newModel, { expires: 30 });
+  };
+
+  const handleProviderChange = (newProvider: string) => {
+    setProvider(newProvider);
+    Cookies.set('selectedProvider', newProvider, { expires: 30 });
+  };
+
   return (
     <BaseChat
       ref={animationScope}
@@ -228,7 +238,9 @@ export const ChatImpl = memo(({ initialMessages, storeMessageHistory }: ChatProp
       promptEnhanced={promptEnhanced}
       sendMessage={sendMessage}
       model={model}
-      setModel={setModel}
+      setModel={handleModelChange}
+      provider={provider}
+      setProvider={handleProviderChange}
       messageRef={messageRef}
       scrollRef={scrollRef}
       handleInputChange={handleInputChange}
@@ -244,10 +256,16 @@ export const ChatImpl = memo(({ initialMessages, storeMessageHistory }: ChatProp
         };
       })}
       enhancePrompt={() => {
-        enhancePrompt(input, (input) => {
-          setInput(input);
-          scrollTextArea();
-        });
+        enhancePrompt(
+          input,
+          (input) => {
+            setInput(input);
+            scrollTextArea();
+          },
+          model,
+          provider,
+          apiKeys,
+        );
       }}
     />
   );
