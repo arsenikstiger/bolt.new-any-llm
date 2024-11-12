@@ -2,6 +2,7 @@ import { type ActionFunctionArgs } from '@remix-run/cloudflare';
 import { StreamingTextResponse, parseStreamPart } from 'ai';
 import { streamText } from '~/lib/.server/llm/stream-text';
 import { stripIndents } from '~/utils/stripIndent';
+import type { ModelInfo } from '~/utils/types';
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -11,10 +12,11 @@ export async function action(args: ActionFunctionArgs) {
 }
 
 async function enhancerAction({ context, request }: ActionFunctionArgs) {
-  const { message } = await request.json<{ message: string }>();
+  const { model, message } = await request.json<{ message: string; model: ModelInfo }>();
 
   try {
     const result = await streamText(
+      model,
       [
         {
           role: 'user',

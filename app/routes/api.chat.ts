@@ -5,15 +5,17 @@ import { MAX_RESPONSE_SEGMENTS, MAX_TOKENS } from '~/lib/.server/llm/constants';
 import { CONTINUE_PROMPT } from '~/lib/.server/llm/prompts';
 import { streamText, type Messages, type StreamingOptions } from '~/lib/.server/llm/stream-text';
 import SwitchableStream from '~/lib/.server/llm/switchable-stream';
+import type { ModelInfo } from '~/utils/types';
 
 export async function action(args: ActionFunctionArgs) {
   return chatAction(args);
 }
 
 async function chatAction({ context, request }: ActionFunctionArgs) {
-  const { messages, apiKeys } = await request.json<{ 
-    messages: Messages,
-    apiKeys: Record<string, string>
+  const { provider, model, messages, apiKeys } = await request.json<{
+    messages: Messages;
+    model: ModelInfo;
+    apiKeys: Record<string, string>;
   }>();
 
   const stream = new SwitchableStream();
@@ -38,13 +40,13 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
         messages.push({ role: 'assistant', content });
         messages.push({ role: 'user', content: CONTINUE_PROMPT });
 
-        const result = await streamText(messages, context.cloudflare.env, options);
+        const result = await streamText(model, messages, context.cloudflare.env, options, apiKeys);
 
         return stream.switchSource(result.toAIStream());
       },
     };
 
-    const result = await streamText(messages, context.cloudflare.env, options, apiKeys);
+    const result = await streamText(model, messages, context.cloudflare.env, options, apiKeys);
 
     stream.switchSource(result.toAIStream());
 
@@ -56,11 +58,11 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
     });
   } catch (error) {
     console.log(error);
-    
+
     if (error.message?.includes('API key')) {
       throw new Response('Invalid or missing API key', {
         status: 401,
-        statusText: 'Unauthorized'
+        statusText: 'Unauthorized',
       });
     }
 

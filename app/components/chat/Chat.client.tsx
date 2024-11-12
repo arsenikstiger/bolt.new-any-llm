@@ -74,7 +74,7 @@ export const ChatImpl = memo(({ initialMessages, storeMessageHistory }: ChatProp
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [chatStarted, setChatStarted] = useState(initialMessages.length > 0);
-  const [model, setModel] = useState(DEFAULT_MODEL);
+  const [model, setModel] = useState<ModelInfo>(null);
 
   const { showChat } = useStore(chatStore);
 
@@ -85,7 +85,8 @@ export const ChatImpl = memo(({ initialMessages, storeMessageHistory }: ChatProp
   const { messages, isLoading, input, handleInputChange, setInput, stop, append } = useChat({
     api: '/api/chat',
     body: {
-      apiKeys
+      model,
+      apiKeys,
     },
     onError: (error) => {
       logger.error('Request failed\n\n', error);
@@ -188,7 +189,7 @@ export const ChatImpl = memo(({ initialMessages, storeMessageHistory }: ChatProp
        * manually reset the input and we'd have to manually pass in file attachments. However, those
        * aren't relevant here.
        */
-      append({ role: 'user', content: `[Model: ${model}]\n\n${diff}\n\n${_input}` });
+      append({ role: 'user', content: `${diff}\n\n${_input}` });
 
       /**
        * After sending a new message we reset all modifications since the model
@@ -196,7 +197,7 @@ export const ChatImpl = memo(({ initialMessages, storeMessageHistory }: ChatProp
        */
       workbenchStore.resetAllFileModifications();
     } else {
-      append({ role: 'user', content: `[Model: ${model}]\n\n${_input}` });
+      append({ role: 'user', content: `${_input}` });
     }
 
     setInput('');

@@ -7,7 +7,7 @@ import { Menu } from '~/components/sidebar/Menu.client';
 import { IconButton } from '~/components/ui/IconButton';
 import { Workbench } from '~/components/workbench/Workbench.client';
 import { classNames } from '~/utils/classNames';
-import { MODEL_LIST, DEFAULT_PROVIDER } from '~/utils/constants';
+import { DEFAULT_PROVIDER, staticProviders } from '~/utils/constants';
 import { Messages } from './Messages.client';
 import { SendButton } from './SendButton.client';
 import { useState } from 'react';
@@ -24,17 +24,57 @@ const EXAMPLE_PROMPTS = [
   { text: 'How do I center a div?' },
 ];
 
-const providerList = [...new Set(MODEL_LIST.map((model) => model.provider))]
+const providerList = staticProviders;
 
-const ModelSelector = ({ model, setModel, modelList, providerList, provider, setProvider }) => {
+const ModelSelector = ({ model, setModel, modelList, providerList, provider, setProvider, setModelList }) => {
+  const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
+
+  const refreshModels = () => {
+    console.log('Refreshing models...');
+  };
+
+  useEffect(() => {
+    const storedApiKeys = Cookies.get('apiKeys');
+    if (storedApiKeys) {
+      setApiKeys(JSON.parse(storedApiKeys));
+    }
+  }, []);
+
+  useEffect(() => {
+    const firstModel = [...modelList].find((m) => m.provider == selectedProvider);
+    setModel(firstModel ? firstModel : null);
+  }, [provider]);
+
   return (
     <div className="mb-2 flex gap-2">
-      <select 
+      <select
         value={provider}
-        onChange={(e) => {
-          setProvider(e.target.value);
-          const firstModel = [...modelList].find(m => m.provider == e.target.value);
-          setModel(firstModel ? firstModel.name : '');
+        onChange={async (e) => {
+          const selectedProvider = e.target.value;
+          setProvider(selectedProvider);
+          const firstModel = [...modelList].find((m) => m.provider == selectedProvider);
+          setModel(firstModel ? firstModel : null);
+
+          // Appel à l'API pour charger les modèles
+          try {
+            const response = await fetch('/api/models', {
+              method: 'POST',
+              body: JSON.stringify({
+                provider: selectedProvider,
+                apiKeys: apiKeys, // Passer les clés API
+              }),
+            });
+
+            if (!response.ok) {
+              const errorBody = await response.text();
+              throw new Error(`Erreur lors de la récupération des modèles: ${errorBody}`);
+            }
+
+            const models = await response.json();
+            setModelList(models); // Mettre à jour la liste des modèles
+          } catch (error) {
+            console.error('Erreur lors du chargement des modèles:', error);
+          }
         }}
         className="flex-1 p-2 rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-prompt-background text-bolt-elements-textPrimary focus:outline-none focus:ring-2 focus:ring-bolt-elements-focus transition-all"
       >
@@ -43,24 +83,26 @@ const ModelSelector = ({ model, setModel, modelList, providerList, provider, set
             {provider}
           </option>
         ))}
-        <option key="Ollama" value="Ollama">
-          Ollama
-        </option>
-        <option key="OpenAILike" value="OpenAILike">
-          OpenAILike
-        </option>
       </select>
       <select
-        value={model}
-        onChange={(e) => setModel(e.target.value)}
+        value={model?.name}
+        onChange={(e) => {
+          const selectedModel = modelList.find((m) => m.name === e.target.value);
+          setModel(selectedModel ? selectedModel : null);
+        }}
         className="flex-1 p-2 rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-prompt-background text-bolt-elements-textPrimary focus:outline-none focus:ring-2 focus:ring-bolt-elements-focus transition-all"
       >
-        {[...modelList].filter(e => e.provider == provider && e.name).map((modelOption) => (
-          <option key={modelOption.name} value={modelOption.name}>
-            {modelOption.label}
-          </option>
-        ))}
+        {[...modelList]
+          .filter((e) => e.provider == provider && e.name)
+          .map((modelOption) => (
+            <option key={modelOption.name} value={modelOption.name}>
+              {modelOption.name}
+            </option>
+          ))}
       </select>
+      <IconButton onClick={refreshModels} title="Refresh Models">
+        <div className="i-ph:arrows-clockwise" />
+      </IconButton>
     </div>
   );
 };
@@ -78,8 +120,8 @@ interface BaseChatProps {
   enhancingPrompt?: boolean;
   promptEnhanced?: boolean;
   input?: string;
-  model: string;
-  setModel: (model: string) => void;
+  model: ModelInfo;
+  setModel: (model: ModelInfo) => void;
   handleStop?: () => void;
   sendMessage?: (event: React.UIEvent, messageInput?: string) => void;
   handleInputChange?: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
@@ -111,6 +153,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const TEXTAREA_MAX_HEIGHT = chatStarted ? 400 : 200;
     const [provider, setProvider] = useState(DEFAULT_PROVIDER);
     const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
+    const [modelList, setModelList] = useState([]); // État pour la liste des modèles
 
     useEffect(() => {
       // Load API keys from cookies on component mount
@@ -138,7 +181,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
           expires: 30, // 30 days
           secure: true, // Only send over HTTPS
           sameSite: 'strict', // Protect against CSRF
-          path: '/' // Accessible across the site
+          path: '/', // Accessible across the site
         });
       } catch (error) {
         console.error('Error saving API keys to cookies:', error);
@@ -192,10 +235,11 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                 <ModelSelector
                   model={model}
                   setModel={setModel}
-                  modelList={MODEL_LIST}
+                  modelList={modelList} // Passer la liste des modèles
                   providerList={providerList}
                   provider={provider}
                   setProvider={setProvider}
+                  setModelList={setModelList} // Passer la fonction pour mettre à jour la liste des modèles
                 />
                 <APIKeyManager
                   provider={provider}
@@ -275,7 +319,9 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     </div>
                     {input.length > 3 ? (
                       <div className="text-xs text-bolt-elements-textTertiary">
-                        Use <kbd className="kdb px-1.5 py-0.5 rounded bg-bolt-elements-background-depth-2">Shift</kbd> + <kbd className="kdb px-1.5 py-0.5 rounded bg-bolt-elements-background-depth-2">Return</kbd> for a new line
+                        Use <kbd className="kdb px-1.5 py-0.5 rounded bg-bolt-elements-background-depth-2">Shift</kbd> +{' '}
+                        <kbd className="kdb px-1.5 py-0.5 rounded bg-bolt-elements-background-depth-2">Return</kbd> for
+                        a new line
                       </div>
                     ) : null}
                   </div>
